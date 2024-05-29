@@ -1,0 +1,2 @@
+sample,fastq_1,fastq_2
+SRR22351863,/workflows/tbAnalyzer/test/SRR7534924_R1.fastq.gz,/workflows/tbAnalyzer/test/SRR7534924_R2.fastq.gz

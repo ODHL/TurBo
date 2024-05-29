@@ -1,11 +1,11 @@
 #!/usr/bin/env nextflow
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    nf-core/ohiotbgenomics
+    nf-core/tbAnalyzer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    Github : https://github.com/nf-core/ohiotbgenomics
-    Website: https://nf-co.re/ohiotbgenomics
-    Slack  : https://nfcore.slack.com/channels/ohiotbgenomics
+    Github : https://github.com/nf-core/tbAnalyzer
+    Website: https://nf-co.re/tbAnalyzer
+    Slack  : https://nfcore.slack.com/channels/tbAnalyzer
 ----------------------------------------------------------------------------------------
 */
 
@@ -17,11 +17,15 @@ nextflow.enable.dsl = 2
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { OHIOTBGENOMICS  } from './workflows/ohiotbgenomics'
-include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_ohiotbgenomics_pipeline'
-include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_ohiotbgenomics_pipeline'
+// Main workflows
+include { tbAnalyzer              } from './workflows/tbanalyzer'
+include { testPrep                } from './workflows/testprep'
 
-include { getGenomeAttribute      } from './subworkflows/local/utils_nfcore_ohiotbgenomics_pipeline'
+// Subworkflows
+include { CREATE_INPUT_CHANNEL    } from './subworkflows/local/create_input_channel'
+include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_tbAnalyzer_pipeline'
+include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_tbAnalyzer_pipeline'
+include { getGenomeAttribute      } from './subworkflows/local/utils_tbAnalyzer_pipeline'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -32,49 +36,46 @@ include { getGenomeAttribute      } from './subworkflows/local/utils_nfcore_ohio
 // TODO nf-core: Remove this line if you don't need a FASTA file
 //   This is an example of how to use getGenomeAttribute() to fetch parameters
 //   from igenomes.config using `--genome`
-params.fasta = getGenomeAttribute('fasta')
+// params.fasta = getGenomeAttribute('fasta')
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    NAMED WORKFLOWS FOR PIPELINE
+    Workflows
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
+
+// WORKFLOW: PREPARE TEST DATA
+workflow OhioTestPrep {
+    // set test samplesheet
+    samplesheet = file(params.input)
+    if(params.isTest==false) {exit 1, "YEP"}
+    main:
+        // prep input
+        CREATE_INPUT_CHANNEL(
+            samplesheet
+        )
+
+        // Download test data
+        testPrep(CREATE_INPUT_CHANNEL.out.reads)
+
+    emit:
+        fastq = testPrep.out.fastq
+}
+
 
 //
 // WORKFLOW: Run main analysis pipeline depending on type of input
 //
-workflow NFCORE_OHIOTBGENOMICS {
+workflow OhioTBAnalyzer {
+    if (params.input) { ch_input = file(params.input) } else { exit 1, 'For -entry NFCORE_OhioTBGenomics: Input samplesheet not specified!' }
 
     take:
     samplesheet // channel: samplesheet read in from --input
 
     main:
 
-    //
-    // WORKFLOW: Run pipeline
-    //
-    OHIOTBGENOMICS (
-        samplesheet
-    )
-
-    emit:
-    multiqc_report = OHIOTBGENOMICS.out.multiqc_report // channel: /path/to/multiqc_report.html
-
-}
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    RUN MAIN WORKFLOW
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
-
-workflow {
-
-    main:
-
-    //
-    // SUBWORKFLOW: Run initialisation tasks
-    //
-    PIPELINE_INITIALISATION (
+    // Initialize
+     PIPELINE_INITIALISATION (
         params.version,
         params.help,
         params.validate_params,
@@ -85,15 +86,12 @@ workflow {
     )
 
     //
-    // WORKFLOW: Run main workflow
+    // WORKFLOW: Run pipeline
     //
-    NFCORE_OHIOTBGENOMICS (
-        PIPELINE_INITIALISATION.out.samplesheet
+    tbAnalyzer (
+        samplesheet
     )
 
-    //
-    // SUBWORKFLOW: Run completion tasks
-    //
     PIPELINE_COMPLETION (
         params.email,
         params.email_on_fail,
@@ -101,8 +99,9 @@ workflow {
         params.outdir,
         params.monochrome_logs,
         params.hook_url,
-        NFCORE_OHIOTBGENOMICS.out.multiqc_report
+        tbAnalyzer.out.multiqc_report
     )
+
 }
 
 /*
@@ -110,3 +109,4 @@ workflow {
     THE END
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
+

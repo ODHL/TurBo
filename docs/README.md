@@ -1,6 +1,6 @@
-# nf-core/ohiotbgenomics: Documentation
+# nf-core/tbAnalyzer: Documentation
 
-The nf-core/ohiotbgenomics documentation is split into the following pages:
+The nf-core/tbAnalyzer documentation is split into the following pages:
 
 - [Usage](usage.md)
   - An overview of how the pipeline works, how to run it and a description of all of the different command-line flags.

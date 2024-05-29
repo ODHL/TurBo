@@ -1,4 +1,4 @@
-# nf-core/ohiotbgenomics: Output
+# nf-core/tbAnalyzer: Output
 
 ## Introduction
 

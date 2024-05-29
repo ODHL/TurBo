@@ -1,7 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "https://raw.githubusercontent.com/nf-core/ohiotbgenomics/master/assets/schema_input.json",
-    "title": "nf-core/ohiotbgenomics pipeline - params.input schema",
+    "$id": "https://raw.githubusercontent.com/nf-core/tbAnalyzer/master/assets/schema_input.json",
+    "title": "nf-core/tbAnalyzer pipeline - params.input schema",
     "description": "Schema for the file provided with params.input",
     "type": "array",
     "items": {

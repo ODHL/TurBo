@@ -1,6 +1,6 @@
 {
-    "name": "nf-core/ohiotbgenomics",
-    "homePage": "https://github.com/nf-core/ohiotbgenomics",
+    "name": "nf-core/tbAnalyzer",
+    "homePage": "https://github.com/nf-core/tbAnalyzer",
     "repos": {
         "https://github.com/nf-core/modules.git": {
             "modules": {
