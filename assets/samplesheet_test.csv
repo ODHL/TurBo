@@ -1,2 +1,2 @@
 sample,fastq_1,fastq_2
-SRR22351863,/workflows/tbAnalyzer/test/SRR7534924_R1.fastq.gz,/workflows/tbAnalyzer/test/SRR7534924_R2.fastq.gz
+SRR22351863,./test/SRR22351863.R1.fastq.gz,./test/SRR22351863.R2.fastq.gz

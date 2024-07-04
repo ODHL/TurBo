@@ -22,6 +22,6 @@ workflow testPrep {
         PREPSRR(samplesheet)
 
     emit:
-    fastq = PREPSRR.out.fastq
-
+    fastqR1 = PREPSRR.out.fastqR1
+    fastqR2 = PREPSRR.out.fastqR2
 }

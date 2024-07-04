@@ -110,4 +110,9 @@ You can cite the `nf-core` publication as follows:
 > _Nat Biotechnol._ 2020 Feb 13. doi: [10.1038/s41587-020-0439-x](https://dx.doi.org/10.1038/s41587-020-0439-x).
 
 test sample
+https://www.ncbi.nlm.nih.gov/biosample?Db=biosample&DbFrom=bioproject&Cmd=Link&LinkName=bioproject_biosample&LinkReadableName=BioSample&ordinalpos=1&IdsFromResult=481625
 https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7578676/ SRR7534924
+
+# pipeline
+https://github.com/CDCgov/NCHHSTP-DTBE-Varpipe-WGS/tree/master
+https://github.com/ranlib/target/blob/master/scripts/wf_varpipe.wdl

@@ -59,7 +59,8 @@ workflow OhioTestPrep {
         testPrep(CREATE_INPUT_CHANNEL.out.reads)
 
     emit:
-        fastq = testPrep.out.fastq
+        fastqR1 = testPrep.out.fastqR1
+        fastqR2 = testPrep.out.fastqR2
 }
 
 
@@ -68,9 +69,7 @@ workflow OhioTestPrep {
 //
 workflow OhioTBAnalyzer {
     if (params.input) { ch_input = file(params.input) } else { exit 1, 'For -entry NFCORE_OhioTBGenomics: Input samplesheet not specified!' }
-
-    take:
-    samplesheet // channel: samplesheet read in from --input
+    samplesheet = file(params.input)
 
     main:
 
@@ -85,9 +84,6 @@ workflow OhioTBAnalyzer {
         params.input
     )
 
-    //
-    // WORKFLOW: Run pipeline
-    //
     tbAnalyzer (
         samplesheet
     )
@@ -101,7 +97,6 @@ workflow OhioTBAnalyzer {
         params.hook_url,
         tbAnalyzer.out.multiqc_report
     )
-
 }
 
 /*

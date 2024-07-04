@@ -6,7 +6,8 @@ process PREPSRR {
     tuple val(meta), path(reads)
 
     output:
-    path("*.gz"),                   emit: fastq
+    path("*R1*.gz"),                   emit: fastqR1
+    path("*R1*.gz"),                   emit: fastqR2
 
     script:
     def args = task.ext.args ?: ''
