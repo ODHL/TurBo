@@ -27,6 +27,10 @@ include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_tbAnalyzer_
 include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_tbAnalyzer_pipeline'
 include { getGenomeAttribute      } from './subworkflows/local/utils_tbAnalyzer_pipeline'
 
+// Modules
+include { PREPSRR                 } from './modules/local/srr'
+include { BASESPACE                 } from './modules/local/basespace'
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     GENOME PARAMETER VALUES
@@ -50,19 +54,41 @@ workflow OhioTestPrep {
     samplesheet = file(params.input)
     if(params.isTest==false) {exit 1, "YEP"}
     main:
-        // prep input
+        // read input
         CREATE_INPUT_CHANNEL(
             samplesheet
         )
 
         // Download test data
-        testPrep(CREATE_INPUT_CHANNEL.out.reads)
-
-    emit:
-        fastqR1 = testPrep.out.fastqR1
-        fastqR2 = testPrep.out.fastqR2
+        BASESPACE(CREATE_INPUT_CHANNEL.out.reads)
+        ch_reads = BASESPACE.out.reads
+        
+        // RUN ANALYZER
+        tbAnalyzer (
+            ch_reads
+        )
 }
 
+// WORKFLOW: PREPARE TEST DATA
+workflow OhioSRRPrep {
+    // set test samplesheet
+    samplesheet = file(params.input)
+    if(params.isTest==false) {exit 1, "YEP"}
+    main:
+        // read input
+        CREATE_INPUT_CHANNEL(
+            samplesheet
+        )
+
+        // Download test data
+        PREPSRR(CREATE_INPUT_CHANNEL.out.reads)
+        ch_reads = PREPSRR.out.reads
+        
+        // RUN ANALYZER
+        tbAnalyzer (
+            ch_reads
+        )
+}
 
 //
 // WORKFLOW: Run main analysis pipeline depending on type of input
@@ -84,8 +110,15 @@ workflow OhioTBAnalyzer {
         params.input
     )
 
-    tbAnalyzer (
+    // read input
+    CREATE_INPUT_CHANNEL(
         samplesheet
+    )
+    ch_reads=CREATE_INPUT_CHANNEL.out.reads
+
+    // RUN ANALYZER
+    tbAnalyzer (
+        ch_reads
     )
 
     PIPELINE_COMPLETION (

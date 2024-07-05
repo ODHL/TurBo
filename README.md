@@ -111,7 +111,7 @@ You can cite the `nf-core` publication as follows:
 
 test sample
 https://www.ncbi.nlm.nih.gov/biosample?Db=biosample&DbFrom=bioproject&Cmd=Link&LinkName=bioproject_biosample&LinkReadableName=BioSample&ordinalpos=1&IdsFromResult=481625
-https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7578676/ SRR7534924
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7578676/SRR7534924
 
 # pipeline
 https://github.com/CDCgov/NCHHSTP-DTBE-Varpipe-WGS/tree/master

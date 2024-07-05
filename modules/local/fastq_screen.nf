@@ -4,14 +4,15 @@ process FASTQ_SCREEN {
 
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/fastq-screen:0.15.3--pl5321hdfd78af_0':
-        'biocontainers/fastq-screen:0.15.3--pl5321hdfd78af_0'}"
+        'dbest/fastq_screen:v0.15.3'}"
+
     input:
         tuple val(meta), path(fastq)
         path(conf)
         path(contamZipped)
 
     output:
-        path("${meta.id}*_screen.*"), emit: screen
+        tuple val(meta), path("*html"),     emit: screen
 
     script:
     """

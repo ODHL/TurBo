@@ -6,8 +6,7 @@ process PREPSRR {
     tuple val(meta), path(reads)
 
     output:
-    path("*R1*.gz"),                   emit: fastqR1
-    path("*R1*.gz"),                   emit: fastqR2
+    tuple val(meta), path("*fastq.gz"), emit: reads
 
     script:
     def args = task.ext.args ?: ''
@@ -18,11 +17,11 @@ process PREPSRR {
                 
     echo "----FASTQ"
     cd $prefix
-    fastq-dump --outdir fastq --gzip --skip-technical --readids --read-filter pass --dumpbase --split-3 --clip ${prefix}.sra
+    fastq-dump --outdir fastq --gzip --skip-technical --readids --read-filter pass --dumpbase --split-3 --split-files ${prefix}.sra
 
     echo "----cleaning"
     mv fastq/${prefix}_pass_1.fastq.gz ../${prefix}.R1.fastq.gz
-    mv fastq/${prefix}_pass_2.fastq.gz ../${prefix}.R2.fastq.gz    
+    mv fastq/${prefix}_pass_2.fastq.gz ../${prefix}.R2.fastq.gz
     """
 
     stub:
