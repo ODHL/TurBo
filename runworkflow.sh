@@ -1,4 +1,8 @@
-if [[ $1 == "prep" ]]; then
+FLAG=$1
+INPUT=$2
+OUTPUT=$3
+
+if [[ $FLAG == "test" ]]; then
 	/home/ubuntu/tools/nextflow \
 		main.nf \
 		-profile docker,test \
@@ -8,12 +12,13 @@ if [[ $1 == "prep" ]]; then
 		--outdir ~/output/tbtest
 fi
 
-if [[ $1 == "run" ]]; then
+if [[ $FLAG == "run" ]]; then
 	/home/ubuntu/tools/nextflow \
 		main.nf \
-		-profile docker,test \
+		-profile docker \
 		-resume \
 		-entry OhioTBAnalyzer \
-		-work-dir ~/output/tbtest/work \
-		--outdir ~/output/tbtest
+		-work-dir $OUTPUT/work \
+		--outdir $OUTPUT \
+		--input $INPUT
 fi

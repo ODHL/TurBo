@@ -4,15 +4,23 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { FASTQC                 } from '../modules/local/fastqc'
-include { TRIMM                  } from '../modules/local/trim'
-include { BBDUK                  } from '../modules/local/bbduk'
-include { FASTQ_SCREEN           } from '../modules/local/fastq_screen'
-include { CLOCKWORK              } from '../modules/local/clockwork'
-include { CENTRIFUGE             } from '../modules/local/centrifuge'
-include { CENTRIFUGE_DB          } from '../modules/local/centrifuge_db'
-include { MULTIQC                } from '../modules/nf-core/multiqc/main'
-include { paramsSummaryMap       } from 'plugin/nf-validation'
+include { FASTQC                            } from '../modules/local/fastqc'
+include { CLOCKWORK                         } from '../modules/local/clockwork'
+include { TRIMM                             } from '../modules/local/trim'
+include { FASTQ_SCREEN                      } from '../modules/local/fastq_screen'
+include { SAMTOOLS_FLAGSTAT                 } from '../modules/local/samtools_flag'
+include { BWA_INDEX                         } from '../modules/local/bwa_index'
+include { BWA_MEM                           } from '../modules/local/bwa_mem'
+
+
+// include { PICARD_CREATESEQUENCEDICTIONARY   } from '../modules/local/picard_seq_dict'
+// include { BBDUK                  } from '../modules/local/bbduk'
+// include { CENTRIFUGE_DB          } from '../modules/local/centrifuge_db'
+// include { CENTRIFUGE             } from '../modules/local/centrifuge'
+// include { TB_PROFILER            } from '../modules/local/tb_profiler'
+// include { BCF2VCF                } from '../modules/local/bcf2vcf'
+// include { MULTIQC                } from '../modules/nf-core/multiqc/main'
+// include { paramsSummaryMap       } from 'plugin/nf-validation'
 
 
 /*
@@ -51,51 +59,97 @@ workflow tbAnalyzer {
     ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]})
     ch_versions = ch_versions.mix(FASTQC.out.versions.first())
 
+    // MODULE: CLOCKWORK
+    CLOCKWORK(
+        ch_reads,
+        params.clockContam,
+        params.clockMetadata
+    )
+    ch_bam=CLOCKWORK.out.deconBam
+
     // MODULE: Repair
     TRIMM (
-        ch_reads
+        CLOCKWORK.out.reads
     )
     ch_trimmed=TRIMM.out.reads
 
-    //
     // MODULE: FASTQ Screen
     FASTQ_SCREEN (
         ch_trimmed,
         params.fastq_screen_configuration,
         params.contam_dir
     )
-    
-    //
-    // MODULE: Repair
-    BBDUK (
-        ch_trimmed,
-        params.contam_dir
+
+    // MODULE: SAMTOOLS SORT, FLAGSTAT
+    SAMTOOLS_FLAGSTAT (
+        ch_bam
     )
+
+    // Index
+    ch_fasta=params.fasta_ref
+    BWA_INDEX(
+        ch_fasta
+    )
+    ch_index=BWA_INDEX.out.index
     
-    // // MODULE: CLOCKWORK
-    // CLOCKWORK(
-    //     ch_trimmed,
-    //     params.clockContam,
-    //     params.clockMetadata
+    // Align
+    BWA_MEM(
+        ch_trimmed,
+        ch_index,
+        ch_fasta,
+        params.sort_bam
+    )
+
+
+    // // PICARD_CREATESEQUENCEDICTIONARY
+    // PICARD_CREATESEQUENCEDICTIONARY(
+    //     ch_trimmed
     // )
 
-    // //
-    // // MODULES: CENTRIFUGE DB
-    // CENTRIFUGE_DB()
+    // GATK
 
+    // SAMTOOLS
+
+    // ANNOTATE
+
+    // LINEAGE
+
+    
     // //
-    // // MODULES: CENTRIFUGE
-    // //centrifuge_files = Channel.fromPath(params.centrifuge_dir)
+    // // MODULE: Repair
+    // BBDUK (
+    //     ch_trimmed,
+    //     params.contam_dir
+    // )
+
+    // // MODULE: CENTRIFUGE
     // CENTRIFUGE(
     //     ch_trimmed,
-    //     CENTRIFUGE_DB.out.cfs
+    //     params.hpv_tar
     // )
 
+    // // MODULE: TB PROFILER
+    // TB_PROFILER(
+    //     BBDUK.out.repaired_reads,
+    //     params.report,
+    //     params.mapper,
+    //     params.caller,
+    //     params.min_depth,
+    //     params.min_af,
+    //     params.min_af_pred,
+    //     params.cov_frac_threshold,
+    //     params.threads
+    // )
 
+    // // MODULE: BCF2VCF
+    // BCF2VCF (
+    //     TB_PROFILER.out.bcf
+    // )
 
+    // MODULE: SNPEFF
+    // SNPEFF (
 
-
-
+    // )
 
     // //
     // // Collate and save software versions
@@ -160,19 +214,19 @@ workflow tbAnalyzer {
 
 // version 1.0
 
-// import "./task_concatenate_fastq.wdl" as concatenate_fastq
-// import "./task_fastqc.wdl" as fastqc
-// import "./task_fastq_screen.wdl" as fastq_screen
-
-// import "./task_trimmomatic.wdl" as trimmomatic
-
+// DONE
+// import "./task_concatenate_fastq.wdl" as concatenate_fastq DONE
+// import "./task_fastqc.wdl" as fastqc DONE
+// import "./task_fastq_screen.wdl" as fastq_screen DONE
+// import "./task_trimmomatic.wdl" as trimmomatic DONE
 // import "./task_bbduk.wdl" as bbduk
 // import "./wf_clockwork_decontamination.wdl" as cd
-
 // import "./task_tbprofiler.wdl" as tbprofiler
-
 // import "./task_bcf2vcf.wdl" as bcf2vcf
 // import "./task_snpEff.wdl" as snpEff
+
+
+// TODO
 // import "./task_concat_2_vcfs.wdl" as concat
 
 // import "./task_collect_multiple_metrics.wdl" as bamQC
@@ -185,11 +239,6 @@ workflow tbAnalyzer {
 
 // import "./task_multiqc.wdl" as multiQC
 
-
-//     # clockwork
-//     Boolean run_clockwork_decontamination = true
-//     File clockwork_decontamination_metadata
-//     File clockwork_contaminants
     
 //     Boolean run_bamQC = true
 

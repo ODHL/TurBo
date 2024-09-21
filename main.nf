@@ -99,16 +99,16 @@ workflow OhioTBAnalyzer {
 
     main:
 
-    // Initialize
-     PIPELINE_INITIALISATION (
-        params.version,
-        params.help,
-        params.validate_params,
-        params.monochrome_logs,
-        args,
-        params.outdir,
-        params.input
-    )
+    // // Initialize
+    //  PIPELINE_INITIALISATION (
+    //     params.version,
+    //     params.help,
+    //     params.validate_params,
+    //     params.monochrome_logs,
+    //     args,
+    //     params.outdir,
+    //     params.input
+    // )
 
     // read input
     CREATE_INPUT_CHANNEL(
@@ -116,20 +116,24 @@ workflow OhioTBAnalyzer {
     )
     ch_reads=CREATE_INPUT_CHANNEL.out.reads
 
+    // Download test data
+    BASESPACE(CREATE_INPUT_CHANNEL.out.reads)
+    ch_reads = BASESPACE.out.reads
+        
     // RUN ANALYZER
     tbAnalyzer (
         ch_reads
     )
 
-    PIPELINE_COMPLETION (
-        params.email,
-        params.email_on_fail,
-        params.plaintext_email,
-        params.outdir,
-        params.monochrome_logs,
-        params.hook_url,
-        tbAnalyzer.out.multiqc_report
-    )
+    // PIPELINE_COMPLETION (
+    //     params.email,
+    //     params.email_on_fail,
+    //     params.plaintext_email,
+    //     params.outdir,
+    //     params.monochrome_logs,
+    //     params.hook_url,
+    //     tbAnalyzer.out.multiqc_report
+    // )
 }
 
 /*
