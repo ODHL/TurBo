@@ -32,7 +32,7 @@ process BBDUK {
         in2=${reads[1]} \
         out1=${prefix}_repaired.R1.fastq.gz \
         out2=${prefix}_repaired.R2.fastq.gz \
-        outs=${prefix}_singletons.fastq.gz
+        outs=${prefix}_singletons.fastq.gz \
 
     # adapters
     bbduk.sh -Xmx\$maxmem threads=\$cpus \
@@ -41,7 +41,7 @@ process BBDUK {
         out1=${prefix}_no_adapter_1.fastq.gz \
         out2=${prefix}_no_adapter_2.fastq.gz \
         ref=/opt/bbmap/resources/adapters.fa \
-        stats=${prefix}_adapters.stats.txt \
+        stats=${prefix}_01_adapters.stats.txt \
         ktrim=r k=23 mink=11 hdist=1 tpe tbo
 
     # phix
@@ -52,7 +52,7 @@ process BBDUK {
         out2=${prefix}_no_phix_2.fastq.gz \
         outm=${prefix}_matched_phix.fq.gz \
         ref=/opt/bbmap/resources/phix174_ill.ref.fa.gz \
-        stats=${prefix}_phix.stats.txt \
+        stats=${prefix}_02_phix.stats.txt \
         k=31 hdist=1
 
     # covid
@@ -63,7 +63,7 @@ process BBDUK {
         out2=${prefix}_no_covid_2.fastq.gz \
         outm=${prefix}_matched_covid.fq.gz \
         ref=/opt/bbmap/resources/Covid19_ref.fa \
-        stats=${prefix}_Covid19.stats.txt \
+        stats=${prefix}_03_Covid19.stats.txt \
         k=31 hdist=1
 
     # polyA
@@ -74,7 +74,7 @@ process BBDUK {
         out2=${prefix}_no_polyA_2.fastq.gz \
         outm=${prefix}_matched_polyA.fq.gz \
         ref=/opt/bbmap/resources/polyA.fa.gz \
-        stats=${prefix}_polyA.stats.txt \
+        stats=${prefix}_04_polyA.stats.txt \
         k=31 hdist=1
 
     # ecoli
@@ -86,8 +86,7 @@ process BBDUK {
         out2=${prefix}_no_Ecoli_2.fastq.gz \
         outm=${prefix}_matched_Ecoli.fq.gz \
         ref=\${CONTAM} \
-        stats=${prefix}_Ecoli.stats.txt \
-        k=10 hdist=1
+        stats=${prefix}_05_Ecoli.stats.txt
 
     # NZ_CP    
     CONTAM=contamination/NZ_CP008889.1.fa.gz
@@ -98,8 +97,7 @@ process BBDUK {
         out2=${prefix}_no_NZ_CP008889_2.fastq.gz \
         outm=${prefix}_matched_NZ_CP008889.fq.gz \
         ref=\${CONTAM} \
-        stats=${prefix}_NZ_CP008889.stats.txt \
-        k=31 hdist=1
+        stats=${prefix}_06_NZCP008889.stats.txt
 
     # plasmid    
     CONTAM=contamination/NZ_CP008889.1_plasmid.fa.gz
@@ -110,8 +108,7 @@ process BBDUK {
         out2=${prefix}_clean_2.fastq.gz \
         outm=${prefix}_matched_NZ_CP008889_plasmid.fq.gz \
         ref=\${CONTAM} \
-        stats=${prefix}_NZ_CP008889_plasmid.stats.txt \
-        k=31 hdist=1
+        stats=${prefix}_07_NZCP008889_plasmid.stats.txt
     
     # cleanup
     rm -frv ~{contamination}

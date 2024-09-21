@@ -25,7 +25,7 @@ process CENTRIFUGE {
     gunzip -c ${reads[0]} > ${prefix}.R1.fastq
     gunzip -c ${reads[1]} > ${prefix}.R2.fastq
 
-    centrifuge -x index/test \
+    centrifuge -x hpv/hpv \
         --threads $task.cpus \
         -q \
         -1 ${prefix}.R1.fastq -2 ${prefix}.R2.fastq \

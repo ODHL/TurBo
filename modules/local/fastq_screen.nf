@@ -13,12 +13,19 @@ process FASTQ_SCREEN {
 
     output:
         tuple val(meta), path("*html"),     emit: screen
+        tuple val(meta), path("*screen.txt"),     emit: stats
 
     script:
     """
     # unzip index and contam files in new dir
     tarFile=\$(readlink -f ${contamZipped})
     tar -xvf \${tarFile}
+
+    bwa index contamination/CP027540.1.fasta.gz
+    bwa index contamination/DI335809.1.fasta.gz
+    bwa index contamination/CP007224.1.fasta.gz
+    bwa index contamination/LR963138.1.fasta.gz
+    bwa index contamination/AP017922.1.fasta.gz
 
     fastq_screen \
       --force \
