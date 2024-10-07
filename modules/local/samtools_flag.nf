@@ -1,6 +1,6 @@
 process SAMTOOLS_FLAGSTAT {
     tag "$meta.id"
-    label 'process_single'
+    label 'process_low'
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -8,7 +8,8 @@ process SAMTOOLS_FLAGSTAT {
         'quay.io/biocontainers/samtools:1.20--h50ea8bc_0' }"
 
     input:
-    tuple val(meta), path(bam)
+    tuple val(meta), path(sam)
+    val(label)
 
     output:
     tuple val(meta), path("*cov.txt"), emit: cov
@@ -22,15 +23,15 @@ process SAMTOOLS_FLAGSTAT {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    samtools sort $bam -o sort_$bam
-    
+    samtools view -Sb $sam | samtools sort -o output.bam
+
     samtools \\
         flagstat \\
         --threads ${task.cpus} \\
-        sort_$bam \\
-        > ${prefix}.flagstat
+        output.bam \\
+        > ${prefix}_${label}.flagstat
 
-    samtools coverage sort_$bam > ${prefix}_cov.txt
+    samtools coverage output.bam > ${prefix}_${label}_cov.txt
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
