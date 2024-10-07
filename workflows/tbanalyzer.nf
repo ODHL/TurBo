@@ -4,13 +4,14 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { FASTQC                            } from '../modules/local/fastqc'
-include { CLOCKWORK                         } from '../modules/local/clockwork'
-include { TRIMM                             } from '../modules/local/trim'
-include { FASTQ_SCREEN                      } from '../modules/local/fastq_screen'
-include { SAMTOOLS_FLAGSTAT                 } from '../modules/local/samtools_flag'
-include { BWA_INDEX                         } from '../modules/local/bwa_index'
-include { BWA_MEM                           } from '../modules/local/bwa_mem'
+include { FASTQC                                            } from '../modules/local/fastqc'
+include { TRIMM                                             } from '../modules/local/trim'
+include { FASTQ_SCREEN                                      } from '../modules/local/fastq_screen'
+include { SAMTOOLS_FLAGSTAT as FLAGSTAT_RAW                 } from '../modules/local/samtools_flag'
+include { SAMTOOLS_FLAGSTAT as FLAGSTAT_CLEAN               } from '../modules/local/samtools_flag'
+include { BWA_INDEX                                         } from '../modules/local/bwa_index'
+include { BWA_MEM                                           } from '../modules/local/bwa_mem'
+include { TBPROFILER                                        } from '../modules/local/tbProfiler'
 
 
 // include { PICARD_CREATESEQUENCEDICTIONARY   } from '../modules/local/picard_seq_dict'
@@ -28,10 +29,11 @@ include { BWA_MEM                           } from '../modules/local/bwa_mem'
     IMPORT SUBWORKFLOWS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { methodsDescriptionText } from '../subworkflows/local/utils_tbAnalyzer_pipeline'
-include { CREATE_INPUT_CHANNEL    } from '../subworkflows/local/create_input_channel'
+include { paramsSummaryMultiqc      } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { softwareVersionsToYAML    } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { methodsDescriptionText    } from '../subworkflows/local/utils_tbAnalyzer_pipeline'
+include { CREATE_INPUT_CHANNEL      } from '../subworkflows/local/create_input_channel'
+include { CLOCKWORK                 } from '../subworkflows/local/clockwork'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -59,20 +61,15 @@ workflow tbAnalyzer {
     ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]})
     ch_versions = ch_versions.mix(FASTQC.out.versions.first())
 
-    // MODULE: CLOCKWORK
-    CLOCKWORK(
-        ch_reads,
-        params.clockContam,
-        params.clockMetadata
-    )
-    ch_bam=CLOCKWORK.out.deconBam
-
-    // MODULE: Repair
+    // MODULE: TRIMM
     TRIMM (
-        CLOCKWORK.out.reads
+        ch_reads,
+        params.trimmomatic_minlen,
+        params.trimmomatic_window_size,
+        params.trimmomatic_quality_trim_score
     )
     ch_trimmed=TRIMM.out.reads
-
+    
     // MODULE: FASTQ Screen
     FASTQ_SCREEN (
         ch_trimmed,
@@ -80,65 +77,45 @@ workflow tbAnalyzer {
         params.contam_dir
     )
 
+    // SUBWORKFLOW: CLOCKWORK
+    // https://github.com/iqbal-lab-org/clockwork/wiki/Walkthrough-scripts-only
+    CLOCKWORK(
+        ch_trimmed
+    )
+    ch_unsortedSam = CLOCKWORK.out.ch_unsortedSam
+    ch_deconFq = CLOCKWORK.out.ch_deconFq
+    ch_unsortedCleanedSam = CLOCKWORK.out.ch_unsortedCleanedSam
+    
     // MODULE: SAMTOOLS SORT, FLAGSTAT
-    SAMTOOLS_FLAGSTAT (
-        ch_bam
+    FLAGSTAT_RAW (
+        ch_unsortedSam,
+        "raw"
     )
 
-    // Index
-    ch_fasta=params.fasta_ref
-    BWA_INDEX(
-        ch_fasta
-    )
-    ch_index=BWA_INDEX.out.index
-    
-    // Align
-    BWA_MEM(
-        ch_trimmed,
-        ch_index,
-        ch_fasta,
-        params.sort_bam
+    FLAGSTAT_CLEAN (
+        ch_unsortedCleanedSam,
+        "cleaned"
     )
 
-
-    // // PICARD_CREATESEQUENCEDICTIONARY
-    // PICARD_CREATESEQUENCEDICTIONARY(
-    //     ch_trimmed
+    // MODULE: SAMTOOLS SORT, FLAGSTAT
+    // TBPROFILER (
+    //     ch_deconFq,
+    //     params.report_template
     // )
 
-    // GATK
-
-    // SAMTOOLS
-
-    // ANNOTATE
-
-    // LINEAGE
-
+    // // MODULE: ANNOTATE
+    // ANNOTATEVCF (
     
-    // //
-    // // MODULE: Repair
-    // BBDUK (
-    //     ch_trimmed,
-    //     params.contam_dir
-    // )
+    //)
 
+    // QUAST(
+    //     ch.assembly
+    // )
+    
     // // MODULE: CENTRIFUGE
     // CENTRIFUGE(
     //     ch_trimmed,
     //     params.hpv_tar
-    // )
-
-    // // MODULE: TB PROFILER
-    // TB_PROFILER(
-    //     BBDUK.out.repaired_reads,
-    //     params.report,
-    //     params.mapper,
-    //     params.caller,
-    //     params.min_depth,
-    //     params.min_af,
-    //     params.min_af_pred,
-    //     params.cov_frac_threshold,
-    //     params.threads
     // )
 
     // // MODULE: BCF2VCF
